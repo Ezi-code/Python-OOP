@@ -90,15 +90,15 @@ class Library:
 
     def borrow_book(self, patron_id, book):
         """borrow book method."""
-        patron = next((p for p in self.patrons if p.id==patron_id), None)
-        book = next((b for b in self.books if b.title=book), None)
+        patron = next((p for p in self.patrons if p.id == patron_id), None)
+        book = next((b for b in self.books if b.title == book), None)
 
         if not patron:
             return "Patron not found."
-        
+
         if not book:
             return "Book not found."
-        
+
         patron.process_borrow(book)
 
     def return_book(self, patron_id, book):
