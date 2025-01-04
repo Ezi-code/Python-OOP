@@ -9,15 +9,19 @@ class Book:
         self.is_available = is_available
 
     def __str__(self):
-        return f"{self.author}, {self.title} {self.is_available}"
+        return f"{self.title}, {self.author} {self.is_available}"
 
     def mark_borrowed(self, patron=None):
-        self.is_available = False
-        return f"Borrowed {patron.name}"
+        if patron:
+            self.is_available = False
+            return f"Borrowed {patron.name}"
+        return "Borrowed"
 
     def mark_returned(self, patron=None):
-        self.is_available = True
-        return f"Returned by {patron.name}"
+        if patron:
+            self.is_available = True
+            return f"Returned by {patron.name}"
+        return "Returned"
 
 
 class Patron:
@@ -42,13 +46,16 @@ class Patron:
                     self.borrowed_books.remove(book)
                     book.is_available = True
                     return "Book returned"
+            return "book not found in borrowed books"
         return "No borrowed books found"
 
 
 class Library:
     """Library object."""
 
-    books = []
+    def __init__(self):
+        self.books = []
+        self.patrons = []
 
     def __str__(self):
         """str method."""
@@ -56,42 +63,63 @@ class Library:
 
     def create_books(self, title, isbn, author, is_available=True):
         """create book method."""
-        book = Book(is_available, isbn, title, author)
+        book = Book(
+            title=title,
+            author=author,
+            isbn=isbn,
+            is_available=is_available,
+        )
+        self.books.append(book)
         return book
 
     def create_patrons(self, name, id, borrowed_books: list = []):
         """create patron method."""
         patron = Patron(name, id, borrowed_books)
+        self.patrons.append(patron)
         return patron
 
     def borrow_book(self, patron, book):
         """borrow book method."""
         return Patron.process_borrow(patron, book)
 
-    def return_book(self, patron, book):
+    def return_book(self, patron_id, book):
         """return book method."""
-        return Patron.process_return(patron, book)
 
-    def search_book(self, indexed):
+        patron = next((p for p in self.patrons if p.id == patron_id), None)
+        book = next((b for b in self.books if b.title == book), None)
+
+        if not book:
+            return "Book not found"
+
+        if not patron:
+            return "Patron not found"
+
+        return patron.process_return(book)
+
+    def search_book(self, query):
         """search for a book method."""
-        return indexed if indexed in books else "Book not found"
+        for book in self.books:
+            if (
+                query.lower() == book.title
+                or query.lower() == book.author
+                or query.lower == book.isbn
+            ):
+                return f"Book found: {book}"
+        return "book not found!"
+
+    def list_patrons(self):
+        for patron in self.patrons:
+            print(f" - {patron}")
+
+    def list_books(self) -> None:
+        for book in self.books:
+            print(book)
 
 
 if __name__ == "__main__":
-
-    books = Library.books
-
-    books.append(
-        Book(title="new book", isbn="1232433", author="Pope", is_available=False)
-    )
-    books.append(Book(title="another book", isbn="1232433", author="Ezi"))
-
-    book4 = Book(title="Last book", isbn="1232433", author="Aaa")
-    book1 = books[0]
-    book2 = books[1]
-
-    patron = Patron(name="new patron", id="212121")
-    patron.process_borrow(book1)
-    patron.process_return(book1)
-
     lib = Library()
+
+    b = lib.create_books(title="title", isbn="1234", author="Pope")
+    p = lib.create_patrons("Pope", 12312)
+    lib.borrow_book(patron=p, book=b)
+    print(lib.list_books())
